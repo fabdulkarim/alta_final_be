@@ -173,3 +173,7 @@ dmypy.json
 
 #fadhil making changes, preparation for deployment/release
 .env
+#ignore all logs
+*.log
+#ignore migrations result
+migrations/

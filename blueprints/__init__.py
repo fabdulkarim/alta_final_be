@@ -101,5 +101,11 @@ def after_request(response):
 
     return response
 
+##add blueprint here
+from blueprints.user.resources import bp_user
+app.register_blueprint(bp_user, url_prefix='/users')
+
+from blueprints.auth import bp_auth
+app.register_blueprint(bp_auth, url_prefix='/auth')
 
 db.create_all()

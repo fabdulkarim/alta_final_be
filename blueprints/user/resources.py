@@ -23,20 +23,24 @@ api = Api(bp_user)
 #CRUD untuk user, hanya bisa diakses admin
 #sesuai dengan rancangan final project, Admin hanya get all dan delete
 class AdminUserEdit(Resource):
-           
+    #changed to put to enable open block/undelete
     @jwt_required
     @admin_required
-    def delete(self, id):
+    def put(self, id):
+        parser = reqparse.RequestParser()
+        parser.add_argument('deleted', location='json', required=True)
+
+        args = parser.parse_args()
 
         qry = Users.query.get(id)
         if qry is None:
             return {'status': 'NOT_FOUND'}, 404
 
-        qry.deleted = True
+        qry.deleted = bool(args['deleted'])
         qry.updated_at = db.func.now()
         db.session.commit()
 
-        return {'message': 'deleted'}, 200
+        return marshal(qry, Users.response_fields), 200
     
     @jwt_required
     @admin_required
@@ -142,6 +146,7 @@ class UserSelf(Resource):
 
 #separated into different class because different purpose (public access to user)
 class PublicResources(Resource):
+    
     def get(self, id):
         #public, not by get
         #qry = Users.query.get(id)
@@ -155,11 +160,12 @@ class PublicResources(Resource):
 
         return marshal(qry, Users.response_fields), 200
 
-    def options(self):
-        return {}, 200
+    # def options(self):
+    #     return {}, 200
 
-api.add_resource(UserSignUp, '/users')
-api.add_resource(UserSelf, '/users/me')
+api.add_resource(UserSignUp, '')
+api.add_resource(UserSelf, '/me')
 #all wildcards should be in lower section
-api.add_resource(AdminUserEdit, '/users', '/users/<int:id>')
-api.add_resource(PublicResources, '/users/<int:id>')
+#apparently jwt in higher places can cause 401 w/o prompt
+api.add_resource(PublicResources, '/<int:id>')
+api.add_resource(AdminUserEdit, '', '/<int:id>')
