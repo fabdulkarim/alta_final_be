@@ -1,0 +1,13 @@
+flask
+flask_restful
+flask-sqlalchemy
+pymysql
+flask-migrate
+flask-script
+flask-jwt-extended
+password_strength
+requests
+pytest
+pytest-cov
+flask-cors
+python-dotenv
