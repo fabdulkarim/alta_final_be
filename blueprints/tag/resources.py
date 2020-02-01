@@ -51,4 +51,21 @@ class AdminTagEdit(Resource):
         qry.photo_url = args['photo_url']
         qry.deleted = bool(args['deleted'])
         qry.updated_at = db.func.now()
+
+        db.session.commit()
+
+        return marshal(qry, Tags.response_fields), 200, {'Content-Type': 'application/json'}
+
+
+class PublicGetTag(Resource):
+    def get(self):
+
+        #public, dont show deleted ones
+        qry = Tags.query.filter_by(deleted=False)
+        qry = qry.all()
+
+        if qry is None:
+            return {'status': 'NOT_FOUND'}, 404, {'Content-Type': 'application/json'}
+
+        return marshal(qry, Tags.public_response_fields), 200, {'Content-Type': 'application/json'}
         

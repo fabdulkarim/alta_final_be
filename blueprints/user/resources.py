@@ -12,6 +12,7 @@ from blueprints import admin_required, user_required
 from datetime import datetime
 
 from .model import Users, UsersDetail
+from ..tag.model import Tags
 from blueprints import db, app
 
 from . import *
@@ -138,21 +139,28 @@ class UserSelf(Resource):
         old_password_digest = hashlib.md5(args['password'].encode()).hexdigest()
         validation = policy.test(args['password_new'])
 
-        #safeguard against different old password
+        #safeguard against different old password dan method ganti password (base user general)
         if old_password_digest != qry.password:
             return {'status': 'failed', 'result': 'wrong password'}, 400, {'Content-Type': 'application/json'}
 
-        if validation == []:
-            password_digest = hashlib.md5(args['password_new'].encode()).hexdigest()
+        if validation != []:
+            return {'status': 'failed', 'result': str(validation)}, 400, {'Content-Type': 'application/json'}
 
-            qry.username = args['username']
-            qry.email = args['email']
-            qry.password = password_digest
-            qry.updated_at = db.func.now()
-            db.session.commit()
+        password_digest = hashlib.md5(args['password_new'].encode()).hexdigest()
 
-            return marshal(qry, Users.response_fields), 200
-        return {'status': 'failed', 'result': str(validation)}, 400, {'Content-Type': 'application/json'}
+        qry.username = args['username']
+        qry.email = args['email']
+        qry.password = password_digest
+        qry.updated_at = db.func.now()
+
+        ##adding user detail edit
+
+        
+
+        db.session.commit()
+
+        return marshal(qry, Users.response_fields), 200
+        
 
     @jwt_required
     @user_required
