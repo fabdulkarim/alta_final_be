@@ -108,4 +108,7 @@ app.register_blueprint(bp_user, url_prefix='/users')
 from blueprints.auth import bp_auth
 app.register_blueprint(bp_auth, url_prefix='/auth')
 
+from blueprints.tag.resources import bp_tag
+app.register_blueprint(bp_tag, url_prefix='/tags')
+
 db.create_all()

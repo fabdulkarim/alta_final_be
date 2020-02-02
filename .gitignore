@@ -175,5 +175,6 @@ dmypy.json
 .env
 #ignore all logs
 *.log
-#ignore migrations result
+#ignore migrations result and storage dir
 migrations/
+storage/
