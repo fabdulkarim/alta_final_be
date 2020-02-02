@@ -73,3 +73,20 @@ class UsersDetail(db.Model):
 
     def __repr__(self):
         return '<Detail %r>' % self.user_detail_id
+
+class UserTags(db.Model):
+    __tablename__ = "user_tag"
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.user_id'), nullable=False)
+    tag_id = db.Column(db.Integer, db.ForeignKey('tag.tag_id'), nullable=False)
+    deleted = db.Column(db.Boolean, nullable=False)
+    created_at = db.Column(db.DateTime, server_default=db.func.now())
+    updated_at = db.Column(db.DateTime, server_onupdate=db.func.now())
+
+    def __init__(self,user_id,tag_id):
+        self.user_id = user_id
+        self.tag_id = tag_id
+        self.deleted = False
+
+    def __repr__(self):
+        return '<User Tags %r>' % self.id

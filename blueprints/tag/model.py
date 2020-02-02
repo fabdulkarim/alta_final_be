@@ -19,12 +19,12 @@ class Tags(db.Model):
     }
 
     response_fields = {
-        'tag_id': fields.Integer
+        'tag_id': fields.Integer,
         'name': fields.String,
         'photo_url': fields.String,
-        'total_follower': fields.Integer
-        'created_at': fields.String
-        'updated_at': fields.String
+        'total_follower': fields.Integer,
+        'created_at': fields.String,
+        'updated_at': fields.String,
         'deleted': fields.Boolean
     }
 

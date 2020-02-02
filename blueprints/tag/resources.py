@@ -68,4 +68,6 @@ class PublicGetTag(Resource):
             return {'status': 'NOT_FOUND'}, 404, {'Content-Type': 'application/json'}
 
         return marshal(qry, Tags.public_response_fields), 200, {'Content-Type': 'application/json'}
-        
+
+api.add_resource(AdminTagEdit, '','/<int:id>')
+api.add_resource(PublicGetTag, '')
