@@ -11,7 +11,8 @@ from blueprints import admin_required, user_required
 
 from datetime import datetime
 
-from .model import Users
+from .model import Users, UsersDetail, UserTags
+from ..tag.model import Tags
 from blueprints import db, app
 
 from . import *
@@ -78,10 +79,16 @@ class UserSignUp(Resource):
 
             try:
                 db.session.add(user)
-                db.session.commit()
             except:
                 return {'status':'failed','message':'conflicting database'}, 409, {'Content-Type':'application/json'}
             app.logger.debug('DEBUG : %s', user)
+
+            ##adding new user detail/info
+            user_id = Users.query.filter_by(username=args['username']).first().user_id
+            user_detail = UsersDetail(user_id,user_id)
+            db.session.add(user_detail)
+
+            db.session.commit()
 
             return marshal(user, Users.response_fields), 200, {'Content-Type': 'application/json'}
         return {'status': 'failed', 'result': str(validation)}, 400, {'Content-Type': 'application/json'}
@@ -106,29 +113,146 @@ class UserSelf(Resource):
         parser = reqparse.RequestParser()
         parser.add_argument('username', location='json', required=True)
         parser.add_argument('email', location='json', required=True)
-        parser.add_argument('password', location='json', required=True)
+        parser.add_argument('password', location='json')
+        parser.add_argument('password_new', location='json')
+        
+        #added input for user_detail, all nullable
+        parser.add_argument('first_name', location='json')
+        parser.add_argument('last_name', location='json')
+        parser.add_argument('job_title', location='json')
+        parser.add_argument('photo_url', location='json')
+        #parsing json for array/list?
+        parser.add_argument('tags', location='json', action='append')
 
         args = parser.parse_args()
 
         id = get_jwt_claims()['user_id']
 
         qry = Users.query.get(id)
+        #add query for user_detail
+        qry2 = UsersDetail.query.get(id)
+
         if qry is None:
-            return {'status': 'NOT_FOUND'}, 404
+            return {'status': 'NOT_FOUND'}, 404, {'Content-Type': 'application/json'}
+        
+        if qry2 is None:
+            return {'status': 'DETAIL_NOT_FOUND'}, 404, {'Content-Type': 'application/json'}
 
-        validation = policy.test(args['password'])
+        #became conditional, if inputed password
+        if args['password']:
+            #added hashing to check old_password
+            old_password_digest = hashlib.md5(args['password'].encode()).hexdigest()
+            validation = policy.test(args['password_new'])
 
-        if validation == []:
-            password_digest = hashlib.md5(args['password'].encode()).hexdigest()
+            #safeguard against different old password dan method ganti password (base user general)
+            if old_password_digest != qry.password:
+                return {'status': 'failed', 'result': 'wrong password'}, 401, {'Content-Type': 'application/json'}
 
-            qry.username = args['username']
-            qry.email = args['email']
+            if validation != []:
+                return {'status': 'failed', 'result': str(validation)}, 401, {'Content-Type': 'application/json'}
+
+            password_digest = hashlib.md5(args['password_new'].encode()).hexdigest()
             qry.password = password_digest
-            qry.updated_at = db.func.now()
-            db.session.commit()
 
-            return marshal(qry, Users.response_fields), 200
-        return {'status': 'failed', 'result': str(validation)}, 400, {'Content-Type': 'application/json'}
+        qry.username = args['username']
+        qry.email = args['email']
+        
+        qry.updated_at = db.func.now()
+
+        ##adding user detail edit, if not empty, change record
+
+        if args['first_name']:
+            qry2['first_name'] = args['first_name']
+      
+        if args['last_name']:
+            qry2['last_name'] = args['last_name']
+
+        if args['job_title']:
+            qry2['job_title'] = args['job_title']
+
+        if args['photo_url']:
+            qry2['photo_url'] = args['photo_url']
+
+        #processing input user-tags and UT.query
+        qry3_all = UserTags.query.filter_by(user_id=id)
+        qry3 = qry3_all.filter_by(deleted=False)
+        
+        ##harus dalam bentuk tag list
+        ##butuh all() atau ngga
+
+        #list of dbs tag, in their names, have to be constructed first
+        #redundancy for rewriting existing to undelete
+        db_tag_list = []
+        db_tag_list_all = []
+        for que in qry3_all:
+            qry5 = Tags.query.get(que.tag_id)
+            if que in qry3:
+                db_tag_list.append(qry5.name)
+            db_tag_list_all.append(qry5.name)
+
+        #operation to determine input_only tag list and db only tag list
+        #both will be used to append and delete usertag table
+
+        ##error, safeguard against empty list
+        if not args['tags']:
+            input_set = set()
+        else:
+            input_set = set(args['tags'])
+
+        input_only = input_set - set(db_tag_list)
+        db_only = set(db_tag_list) - input_set
+
+        #two times iteration, both by names
+        for input_iter in input_only:
+            #add safeguard for re-adding deleted tags
+            #get tag_id first
+            qry4 = Tags.query.filter_by(name=input_iter)
+            qry4 = qry4.first()
+            tag_id = qry4.tag_id
+
+
+            #rewrite deleted to false if existing
+            if input_iter in db_tag_list_all:
+                #get from qry all, reactivate
+                qry_reactivate = qry3_all.filter_by(tag_id=tag_id).first()
+                qry_reactivate.deleted = False
+            #kondisi mint
+            else:
+            #qry4 used for search for tag_id first
+                user_tag = UserTags(id, tag_id)
+
+                db.session.add(user_tag)
+        
+        for db_iter in db_only:
+            qry4 = Tags.query.filter_by(name=db_iter)
+            qry4 = qry4.first()
+            tag_id = qry4.tag_id
+            #qry3 is a user-filtered usertag
+            #do a second filter for tag_id
+            qry6 = qry3.filter_by(tag_id=tag_id).first()
+            #set delete to true
+            qry6.deleted = True
+            qry6.updated_at = db.func.now()
+
+        qry2.updated_at = db.func.now()      
+
+        #all commit
+        db.session.commit()
+
+        #get list of user tags, turn into list of names
+        qry7 = UserTags.query.filter_by(user_id=id).filter_by(deleted=False)
+        db_tag_list_final = []
+        for que in qry7:
+            qry5 = Tags.query.get(que.tag_id)
+            db_tag_list_final.append(qry5.name)
+
+
+        user_data = marshal(qry, Users.response_fields)
+        user_detail_data = marshal(qry2, UsersDetail.response_fields)
+        user_tag_data = db_tag_list_final
+
+        return {'user_data':user_data, 'user_detail_data':user_detail_data, 'user_tag_data':user_tag_data}, 200, {'Content-Type': 'application/json'}
+        
 
     @jwt_required
     @user_required
