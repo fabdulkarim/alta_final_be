@@ -114,4 +114,7 @@ app.register_blueprint(bp_tag, url_prefix='/tags')
 from blueprints.posting.resources import bp_posting
 app.register_blueprint(bp_posting, url_prefix='/posting')
 
+from blueprints.upload import bp_upload
+app.register_blueprint(bp_upload, url_prefix='/upload')
+
 db.create_all()
