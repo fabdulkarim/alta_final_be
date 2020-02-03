@@ -163,16 +163,16 @@ class UserSelf(Resource):
         ##adding user detail edit, if not empty, change record
 
         if args['first_name']:
-            qry2['first_name'] = args['first_name']
+            qry2.first_name = args['first_name']
       
         if args['last_name']:
-            qry2['last_name'] = args['last_name']
+            qry2.last_name = args['last_name']
 
         if args['job_title']:
-            qry2['job_title'] = args['job_title']
+            qry2.job_title = args['job_title']
 
         if args['photo_url']:
-            qry2['photo_url'] = args['photo_url']
+            qry2.photo_url = args['photo_url']
 
         #processing input user-tags and UT.query
         qry3_all = UserTags.query.filter_by(user_id=id)
