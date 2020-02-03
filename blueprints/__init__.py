@@ -111,4 +111,7 @@ app.register_blueprint(bp_auth, url_prefix='/auth')
 from blueprints.tag.resources import bp_tag
 app.register_blueprint(bp_tag, url_prefix='/tags')
 
+from blueprints.posting.resources import bp_posting
+app.register_blueprint(bp_posting, url_prefix='/posting')
+
 db.create_all()
