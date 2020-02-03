@@ -264,7 +264,23 @@ class UserSelf(Resource):
         if qry is None:
             return {'status': 'NOT_FOUND'}, 404
 
-        return marshal(qry, Users.response_fields), 200
+        #add get detail and tag data
+
+        qry2 = UsersDetail.query.get(id)
+        #no none: show filter field empty
+        
+        #get list of user tags, turn into list of names
+        qry3 = UserTags.query.filter_by(user_id=id).filter_by(deleted=False)
+        db_tag_list_final = []
+        for que in qry3:
+            qry4 = Tags.query.get(que.tag_id)
+            db_tag_list_final.append(qry4.name)
+
+        user_data = marshal(qry, Users.response_fields)
+        user_detail_data = marshal(qry2, UsersDetail.response_fields)
+        user_tag_data = db_tag_list_final
+
+        return {'user_data':user_data, 'user_detail_data':user_detail_data, 'user_tag_data':user_tag_data}, 200, {'Content-Type': 'application/json'}
 
     def options(self):
         return {}, 200
