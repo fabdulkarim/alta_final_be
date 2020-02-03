@@ -79,14 +79,16 @@ class UserSignUp(Resource):
 
             try:
                 db.session.add(user)
+
+                user_id = Users.query.filter_by(username=args['username']).first().user_id
+                user_detail = UsersDetail(user_id,user_id)
+                db.session.add(user_detail)
             except:
                 return {'status':'failed','message':'conflicting database'}, 409, {'Content-Type':'application/json'}
             app.logger.debug('DEBUG : %s', user)
 
             ##adding new user detail/info
-            user_id = Users.query.filter_by(username=args['username']).first().user_id
-            user_detail = UsersDetail(user_id,user_id)
-            db.session.add(user_detail)
+            
 
             db.session.commit()
 
