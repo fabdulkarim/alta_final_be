@@ -35,8 +35,9 @@ class TopLevels(db.Model):
         'updated_at': fields.String
     }
 
-    def __init__(self, user_id, content_type, html_content, **kwargs):
+    def __init__(self, user_id, title, content_type, html_content, **kwargs):
         self.user_id = user_id
+        self.title = title
         self.content_type = content_type
         self.html_content = html_content
         self.views = 0
