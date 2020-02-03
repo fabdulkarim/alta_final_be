@@ -80,6 +80,11 @@ class UserSignUp(Resource):
             try:
                 db.session.add(user)
 
+<<<<<<< HEAD
+=======
+                ##adding new user detail/info
+                #should be inside try, to catch duplicate error and produce 409s
+>>>>>>> 0cbfac653b7fe41dfc7fd1e56acae2b3cdeac503
                 user_id = Users.query.filter_by(username=args['username']).first().user_id
                 user_detail = UsersDetail(user_id,user_id)
                 db.session.add(user_detail)
@@ -87,9 +92,12 @@ class UserSignUp(Resource):
                 return {'status':'failed','message':'conflicting database'}, 409, {'Content-Type':'application/json'}
             app.logger.debug('DEBUG : %s', user)
 
+<<<<<<< HEAD
             ##adding new user detail/info
             
 
+=======
+>>>>>>> 0cbfac653b7fe41dfc7fd1e56acae2b3cdeac503
             db.session.commit()
 
             return marshal(user, Users.response_fields), 200, {'Content-Type': 'application/json'}
