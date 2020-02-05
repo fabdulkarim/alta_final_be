@@ -128,8 +128,15 @@ class TopLevelCR(Resource):
 
         return marshal(top_level, TopLevels.response_fields), 200, {'Content-Type':'application/json'}
 
+    def options(self):
+        return {}, 200
+
 
 class TopLevelRUD(Resource):
+
+    def options(self):
+        return {}, 200
+        
     #public get by id
     def get(self, id):
         qry = TopLevels.query.filter(TopLevels.content_status.in_((0,1)))
