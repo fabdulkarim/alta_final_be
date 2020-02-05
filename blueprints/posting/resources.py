@@ -1,6 +1,6 @@
 from flask import Blueprint
 from flask_restful import Api, reqparse, Resource, marshal, inputs
-from sqlalchemy import desc
+from sqlalchemy import desc, or_
 
 from flask_jwt_extended import jwt_required, get_jwt_claims
 from blueprints import admin_required, user_required
@@ -40,6 +40,14 @@ class TopLevelCR(Resource):
             qry = qry.filter_by(content_type=args['content_type'])
 
         #search feature
+        #exact search in HTML content first
+        #combo wildcard search also in title
+        if args['keyword']:
+            qry = qry.filter(or_(
+                        TopLevels.title.like("%"+args['keyword']+"%"),\
+                        TopLevels.html_content.like("%"+args['keyword']+"%")
+                    )
+                )
 
         #count qry result
         total_result = len(qry.all())
@@ -144,6 +152,9 @@ class TopLevelRUD(Resource):
     def put(self,id):
 
         qry = TopLevels.query.filter_by(id=id)
+
+
+        return {'status':'NOT_FOUND','message':'Layanan belum tersedia, mohon maaf'}, 404, {'Content-Type':'application/json'}
 
         #determine admin or user?
         
