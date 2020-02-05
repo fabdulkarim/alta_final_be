@@ -123,6 +123,9 @@ class UserSelf(Resource):
         parser.add_argument('job_title', location='json')
         parser.add_argument('photo_url', location='json')
         #parsing json for array/list?
+        ##changed to required. putting [] means (soft) deleting all tags for user
+        ###FINAL: have to be inputed always. but cant be made required
+        ### [] returned None still counted as none
         parser.add_argument('tags', location='json', action='append')
 
         args = parser.parse_args()
@@ -195,7 +198,11 @@ class UserSelf(Resource):
         #both will be used to append and delete usertag table
 
         ##error, safeguard against empty list
-        if not args['tags']:
+        ###reqparse if keyword doesnt exist
+        ####[mas Kobar] urusin aja di FEnya. ntar bingung sendiri
+        # if 'tags' in args:
+        #     print("Masuk boskuh")
+        if args['tags'] is None:
             input_set = set()
         else:
             input_set = set(args['tags'])
