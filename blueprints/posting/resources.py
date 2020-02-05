@@ -28,28 +28,49 @@ class TopLevelCR(Resource):
         parser =reqparse.RequestParser()
         parser.add_argument("keyword", location="args")
         parser.add_argument("tags", location="args")
-        parser.add_argument("content_type", location="args")
+        parser.add_argument("content_type", location="args", choices=('article','question'))
         parser.add_argument("p", type=int, location="args", default=1)
         parser.add_argument("rp", type=int, location="args", default=15)
         args = parser.parse_args()
 
 
-        if qry is None:
-            return {'status': 'NOT_FOUND'}, 404, {'Content-Type':'application/json'}
-
         #modify later to add pagination and filtering
+        #content_type filtering
+        if args['content_type']:
+            qry = qry.filter_by(content_type=args['content_type'])
+
+        #search feature
+
+        #count qry result
+        total_result = len(qry.all())
+        if (total_result%args['rp'] != 0) | (total_result == 0):
+            total_pages = int(total_result/args['rp']) + 1
+        else:
+            total_pages = int(total_result/args['rp'])
+
 
         #pagination
 
         offset = (args['p']-1)*args['rp']
         qry = qry.limit(args['rp']).offset(offset)
 
+        query_info = {
+            'total_result': total_result,
+            'total_pages': total_pages,
+            'page_number': args['p'],
+            'result_per_pages': args['rp']
+        }
+
+        #get ready to move NONE to lower part
+        if qry is None:
+            return {'status': 'NOT_FOUND'}, 404, {'Content-Type':'application/json'}
+
         #added user/author detail for FE request
         rows = []
         for que in qry:
-            check_f_name = UsersDetail.query.filter_by(user_id=que.user_id).first_name
-            check_l_name = UsersDetail.query.filter_by(user_id=que.user_id).last_name
-            check_photo = UsersDetail.query.filter_by(user_id=que.user_id).photo_url
+            check_f_name = UsersDetail.query.filter_by(user_id=que.user_id).first().first_name
+            check_l_name = UsersDetail.query.filter_by(user_id=que.user_id).first().last_name
+            check_photo = UsersDetail.query.filter_by(user_id=que.user_id).first().photo_url
             if (check_f_name == None) & (check_l_name == None):
                 username = Users.query.get(que.user_id).username
             elif (check_l_name == None):
@@ -64,9 +85,14 @@ class TopLevelCR(Resource):
             else:
                 photo_url = check_photo
 
-            rows.append({'username':username,'photo_url':photo_url,'posting_detail':marshal(que, TopLevels.response_fields)})
+            user_data = {
+                'username': username,
+                'photo_url': photo_url
+            }
 
-        return rows, 200, {'Content-Type':'application/json'}
+            rows.append({'user_data':user_data,'posting_detail':marshal(que, TopLevels.response_fields)})
+
+        return {'query_info':query_info,'query_data':rows}, 200, {'Content-Type':'application/json'}
 
     @jwt_required
     @user_required
@@ -75,7 +101,7 @@ class TopLevelCR(Resource):
         #get argument from input
         parser = reqparse.RequestParser()
         parser.add_argument('title', location='json', required=True)
-        parser.add_argument('content_type', location='json', required=True)
+        parser.add_argument('content_type', location='json', required=True, choices=('article','question'))
         parser.add_argument('html_content', location='json', required=True)
         parser.add_argument('banner_photo_url', location='json')
         
@@ -94,9 +120,6 @@ class TopLevelCR(Resource):
 
         return marshal(top_level, TopLevels.response_fields), 200, {'Content-Type':'application/json'}
 
-<<<<<<< Updated upstream
-api.add_resource(TopLevelCR,'/toplevel')
-=======
 
 class TopLevelRUD(Resource):
     #public get by id
@@ -128,4 +151,3 @@ class TopLevelRUD(Resource):
 
 api.add_resource(TopLevelCR,'/toplevel')
 api.add_resource(TopLevelRUD, '/toplevel/<int:id>')
->>>>>>> Stashed changes
