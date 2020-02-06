@@ -7,7 +7,7 @@ from blueprints import admin_required, user_required
 
 from datetime import datetime
 
-from .model import TopLevels
+from .model import TopLevels, SecondLevels
 from ..user.model import Users, UsersDetail
 from blueprints import db, app
 
@@ -185,7 +185,36 @@ class TopLevelRUD(Resource):
         }
 
         #second data dikosongin, buat slot komen dan jawaban
-        return {'posting_data':posting_data, 'second_data':[]}, 200, {'Content-Type':'application/json'}
+        ##doing komen dan jawaban rn
+        qry2 = SecondLevels.query.filter_by(parent_id=id)
+        print(qry2)
+
+        rows = []
+        for que in qry2:
+            check_f_name = UsersDetail.query.filter_by(user_id=que.user_id).first().first_name
+            check_l_name = UsersDetail.query.filter_by(user_id=que.user_id).first().last_name
+            check_photo = UsersDetail.query.filter_by(user_id=que.user_id).first().photo_url
+            if (check_f_name == None) & (check_l_name == None):
+                username = Users.query.get(que.user_id).username
+            elif (check_l_name == None):
+                username = check_f_name
+            elif (check_f_name == None):
+                username = check_l_name
+            else:
+                username = check_f_name + " " + check_l_name
+            
+            if check_photo == None:
+                photo_url = "null"
+            else:
+                photo_url = check_photo
+
+            user_data = {
+                'username': username,
+                'photo_url': photo_url
+            }
+            rows.append({'user_data':user_data,'posting_detail':marshal(que, SecondLevels.response_fields)})
+
+        return {'posting_data':posting_data, 'second_data':rows}, 200, {'Content-Type':'application/json'}
         # return marshal(qry, TopLevels.response_fields), 200, {'Content-Type':'application/json'}
 
     @jwt_required
@@ -197,8 +226,41 @@ class TopLevelRUD(Resource):
         return {'status':'NOT_FOUND','message':'Layanan belum tersedia, mohon maaf'}, 404, {'Content-Type':'application/json'}
 
         #determine admin or user?
+
+class SecondLevelCU(Resource):
+    #CORS
+    def options(self, *args, **kwargs):
+        return {},200
+
+    @jwt_required
+    @user_required
+    def post(self, id):
+        #get argument from input
+        parser = reqparse.RequestParser()
+        parser.add_argument('content_type', location='json', required=True, choices=('answer','comment'))
+        parser.add_argument('html_content', location='json', required=True)        
+        args = parser.parse_args()
+
+        #verify content is good for tl que -> ans, art -> com
+        parent_type = TopLevels.query.get(id).content_type
+        if (args['content_type'] == 'answer' and parent_type != 'question') or \
+            (args['content_type'] == 'comment' and parent_type != 'article'):
+            return {'status':'Bad Request','message':'Incompatible Second Level Content Type'}, 422, {'Content-Type':'application/json'} 
+
+        #get user_id for posting purposes
+        user_id = get_jwt_claims()['user_id']
+
+        #generate object with parent_id from url-params
+        second_level = SecondLevels(user_id,id,args['content_type'],args['html_content'])
+
+        db.session.add(second_level)
+        db.session.commit()
+
+        return marshal(second_level, SecondLevels.response_fields), 200, {'Content-Type': 'application/json'} 
+
         
 
 
 api.add_resource(TopLevelCR,'/toplevel')
 api.add_resource(TopLevelRUD, '/toplevel/<int:id>')
+api.add_resource(SecondLevelCU,'/secondlevel/<int:id>')
