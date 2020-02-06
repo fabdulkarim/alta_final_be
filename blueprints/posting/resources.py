@@ -1,6 +1,6 @@
 from flask import Blueprint
 from flask_restful import Api, reqparse, Resource, marshal, inputs
-from sqlalchemy import desc, or_
+from sqlalchemy import desc, or_, asc
 
 from flask_jwt_extended import jwt_required, get_jwt_claims
 from blueprints import admin_required, user_required
@@ -48,6 +48,9 @@ class TopLevelCR(Resource):
                         TopLevels.html_content.like("%"+args['keyword']+"%")
                     )
                 )
+
+        #add sort by time
+        qry = qry.order_by(desc(TopLevels.created_at))
 
         #count qry result
         total_result = len(qry.all())
@@ -153,7 +156,37 @@ class TopLevelRUD(Resource):
         qry.views += 1
         db.session.commit()
 
-        return marshal(qry, TopLevels.response_fields), 200, {'Content-Type':'application/json'}
+        ##adding detail so format stays the same with GET all
+        check_f_name = UsersDetail.query.filter_by(user_id=qry.user_id).first().first_name
+        check_l_name = UsersDetail.query.filter_by(user_id=qry.user_id).first().last_name
+        check_photo = UsersDetail.query.filter_by(user_id=qry.user_id).first().photo_url
+        if (check_f_name == None) & (check_l_name == None):
+            username = Users.query.get(qry.user_id).username
+        elif (check_l_name == None):
+            username = check_f_name
+        elif (check_f_name == None):
+            username = check_l_name
+        else:
+            username = check_f_name + " " + check_l_name
+        
+        if check_photo == None:
+            photo_url = "null"
+        else:
+            photo_url = check_photo
+
+        user_data = {
+            'username': username,
+            'photo_url': photo_url
+        }
+
+        posting_data = {
+            'user_data': user_data,
+            'posting_detail': marshal(qry, TopLevels.response_fields)
+        }
+
+        #second data dikosongin, buat slot komen dan jawaban
+        return {'posting_data':posting_data, 'second_data':[]}, 200, {'Content-Type':'application/json'}
+        # return marshal(qry, TopLevels.response_fields), 200, {'Content-Type':'application/json'}
 
     @jwt_required
     def put(self,id):
