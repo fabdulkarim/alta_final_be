@@ -1,6 +1,6 @@
 from flask import Blueprint
 from flask_restful import Api, reqparse, Resource, marshal, inputs
-from sqlalchemy import desc, or_
+from sqlalchemy import desc, or_, asc
 
 from flask_jwt_extended import jwt_required, get_jwt_claims
 from blueprints import admin_required, user_required
@@ -48,6 +48,9 @@ class TopLevelCR(Resource):
                         TopLevels.html_content.like("%"+args['keyword']+"%")
                     )
                 )
+
+        #add sort by time
+        qry = qry.order_by(desc(TopLevels.created_at))
 
         #count qry result
         total_result = len(qry.all())
