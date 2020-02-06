@@ -214,7 +214,14 @@ class TopLevelRUD(Resource):
             }
             rows.append({'user_data':user_data,'posting_detail':marshal(que, SecondLevels.response_fields)})
 
-        return {'posting_data':posting_data, 'second_data':rows}, 200, {'Content-Type':'application/json'}
+        second_data = {
+            'second_info': {
+                'sl_amount': len(rows)
+            },
+            'second_detail_list': rows
+        }
+
+        return {'posting_data':posting_data, 'second_data':second_data}, 200, {'Content-Type':'application/json'}
         # return marshal(qry, TopLevels.response_fields), 200, {'Content-Type':'application/json'}
 
     @jwt_required

@@ -51,6 +51,7 @@ class TopLevels(db.Model):
 
 
 
+# class PostingTags(db.Model):
 class SecondLevels(db.Model):
     __tablename__ = "second_level"
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
