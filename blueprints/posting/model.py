@@ -54,8 +54,9 @@ class TopLevels(db.Model):
 class SecondLevels(db.Model):
     __tablename__ = "second_level"
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    user_id = user_id = db.Column(db.Integer, db.ForeignKey('user.user_id'), nullable=False)
-    title = db.Column(db.String(255), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.user_id'), nullable=False)
+    parent_id = db.Column(db.Integer, db.ForeignKey('top_level.id'), nullable=False)
+    #no title
     #content type -- either comment or answer
     content_type = db.Column(db.String(30), nullable=False) 
     html_content = db.Column(db.Text, nullable=False)
@@ -76,7 +77,7 @@ class SecondLevels(db.Model):
     response_fields = {
         'id': fields.Integer,
         'user_id': fields.Integer,
-        'title': fields.String,
+        'parent_id': fields.Integer,
         'content_type': fields.String,
         'html_content': fields.String,
         'content_status': fields.Integer,
@@ -85,9 +86,9 @@ class SecondLevels(db.Model):
         'updated_at': fields.String
     }
 
-    def __init__(self, user_id, title, content_type, html_content):
+    def __init__(self, user_id, parent_id, content_type, html_content):
         self.user_id = user_id
-        self.title = title
+        self.parent_id = parent_id
         self.content_type = content_type
         self.html_content = html_content
         self.content_status = 0
