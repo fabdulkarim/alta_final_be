@@ -255,7 +255,6 @@ class UserSelf(Resource):
             qry5 = Tags.query.get(que.tag_id)
             db_tag_list_final.append(qry5.name)
 
-
         user_data = marshal(qry, Users.response_fields)
         user_detail_data = marshal(qry2, UsersDetail.response_fields)
         user_tag_data = db_tag_list_final
@@ -284,25 +283,214 @@ class UserSelf(Resource):
             qry4 = Tags.query.get(que.tag_id)
             db_tag_list_final.append(qry4.name)
 
-        #add data postingan bikin query baru
-        qry5 = TopLevels.query.filter_by(user_id=id).filter_by(content_type='article')
-        qry6 = TopLevels.query.filter_by(user_id=id).filter_by(content_type='question')
-        qry7 = SecondLevels.query.filter_by(user_id=id).filter_by(content_type='answer')
-
         user_data = marshal(qry, Users.response_fields)
         user_detail_data = marshal(qry2, UsersDetail.response_fields)
         user_tag_data = db_tag_list_final
 
-        user_posting_data = {
-            'article': marshal(qry5, TopLevels.response_fields),
-            'question': marshal(qry6, TopLevels.response_fields),
-            'answer': marshal(qry7, SecondLevels.response_fields)
-        }
-
-        return {'user_data':user_data, 'user_detail_data':user_detail_data, 'user_tag_data':user_tag_data, 'user_posting_data'}, 200, {'Content-Type': 'application/json'}
+        return {'user_data':user_data, 'user_detail_data':user_detail_data, 'user_tag_data':user_tag_data}, 200, {'Content-Type': 'application/json'}
 
     def options(self):
         return {}, 200
+
+class UserSelfPostingArticle(Resource):
+    #CORS
+    def options(self):
+        return {}, 200
+    
+    @jwt_required
+    @user_required
+    def get(self):
+        id = get_jwt_claims()['user_id']
+
+        parser =reqparse.RequestParser()
+        parser.add_argument("p", type=int, location="args", default=1)
+        parser.add_argument("rp", type=int, location="args", default=15)
+        args = parser.parse_args()
+
+        qry = TopLevels.query.filter_by(user_id=id).filter_by(content_type='article')
+
+        qry = qry.order_by(desc(TopLevels.created_at))
+
+        #prepare query info so similar to home GET
+        #count qry result
+        total_result = len(qry.all())
+        if (total_result%args['rp'] != 0) | (total_result == 0):
+            total_pages = int(total_result/args['rp']) + 1
+        else:
+            total_pages = int(total_result/args['rp'])
+
+
+        #pagination
+
+        offset = (args['p']-1)*args['rp']
+        qry = qry.limit(args['rp']).offset(offset)
+
+        query_info = {
+            'total_result': total_result,
+            'total_pages': total_pages,
+            'page_number': args['p'],
+            'result_per_pages': args['rp']
+        }
+
+        rows = []
+        for que in qry:
+            rows.append({'posting_detail':marshal(que, TopLevels.response_fields)})
+
+        return {'query_info': query_info,'query_data':rows}, 200, {'Content-Type': 'application/json'}
+
+#HARD COPY FROM ABOVE
+class UserSelfPostingQuestion(Resource):
+    #CORS
+    def options(self):
+        return {}, 200
+    
+    @jwt_required
+    @user_required
+    def get(self):
+        id = get_jwt_claims()['user_id']
+
+        parser =reqparse.RequestParser()
+        parser.add_argument("p", type=int, location="args", default=1)
+        parser.add_argument("rp", type=int, location="args", default=15)
+        args = parser.parse_args()
+
+        qry = TopLevels.query.filter_by(user_id=id).filter_by(content_type='question')
+
+        qry = qry.order_by(desc(TopLevels.created_at))
+
+        #prepare query info so similar to home GET
+        #count qry result
+        total_result = len(qry.all())
+        if (total_result%args['rp'] != 0) | (total_result == 0):
+            total_pages = int(total_result/args['rp']) + 1
+        else:
+            total_pages = int(total_result/args['rp'])
+
+
+        #pagination
+
+        offset = (args['p']-1)*args['rp']
+        qry = qry.limit(args['rp']).offset(offset)
+
+        query_info = {
+            'total_result': total_result,
+            'total_pages': total_pages,
+            'page_number': args['p'],
+            'result_per_pages': args['rp']
+        }
+
+        rows = []
+        for que in qry:
+            rows.append({'posting_detail':marshal(que, TopLevels.response_fields)})
+        return {'query_info': query_info,'query_data':rows}, 200, {'Content-Type': 'application/json'}
+
+class UserSelfPostingAnswer(Resource):
+    #CORS
+    def options(self):
+        return {}, 200
+    
+    @jwt_required
+    @user_required
+    def get(self):
+        id = get_jwt_claims()['user_id']
+
+        parser =reqparse.RequestParser()
+        parser.add_argument("p", type=int, location="args", default=1)
+        parser.add_argument("rp", type=int, location="args", default=15)
+        args = parser.parse_args()
+
+        qry = SecondLevels.query.filter_by(user_id=id).filter_by(content_type='answer')
+
+        qry = qry.order_by(desc(SecondLevels.created_at))
+
+        #prepare query info so similar to home GET
+        #count qry result
+        total_result = len(qry.all())
+        if (total_result%args['rp'] != 0) | (total_result == 0):
+            total_pages = int(total_result/args['rp']) + 1
+        else:
+            total_pages = int(total_result/args['rp'])
+
+
+        #pagination
+
+        offset = (args['p']-1)*args['rp']
+        qry = qry.limit(args['rp']).offset(offset)
+
+        query_info = {
+            'total_result': total_result,
+            'total_pages': total_pages,
+            'page_number': args['p'],
+            'result_per_pages': args['rp']
+        }
+
+        rows = []
+        for que in qry:
+            qry2 = TopLevels.query.get(que.parent_id)
+            rows.append({'posting_detail':marshal(que, SecondLevels.response_fields),'parent_detail':marshal(qry2, TopLevels.response_fields)})
+
+        second_data = {
+            'second_info': {
+                'sl_amount': len(rows)
+            },
+            'second_detail_list': rows
+        }
+
+        return {'query_info': query_info,'second_data':second_data}, 200, {'Content-Type': 'application/json'}
+
+class UserSelfPostingComment(Resource):
+    #CORS
+    def options(self):
+        return {}, 200
+    
+    @jwt_required
+    @user_required
+    def get(self):
+        id = get_jwt_claims()['user_id']
+
+        parser =reqparse.RequestParser()
+        parser.add_argument("p", type=int, location="args", default=1)
+        parser.add_argument("rp", type=int, location="args", default=15)
+        args = parser.parse_args()
+
+        qry = SecondLevels.query.filter_by(user_id=id).filter_by(content_type='comment')
+
+        qry = qry.order_by(desc(SecondLevels.created_at))
+
+        #prepare query info so similar to home GET
+        #count qry result
+        total_result = len(qry.all())
+        if (total_result%args['rp'] != 0) | (total_result == 0):
+            total_pages = int(total_result/args['rp']) + 1
+        else:
+            total_pages = int(total_result/args['rp'])
+
+
+        #pagination
+
+        offset = (args['p']-1)*args['rp']
+        qry = qry.limit(args['rp']).offset(offset)
+
+        query_info = {
+            'total_result': total_result,
+            'total_pages': total_pages,
+            'page_number': args['p'],
+            'result_per_pages': args['rp']
+        }
+
+        rows = []
+        for que in qry:
+            qry2 = TopLevels.query.get(que.parent_id)
+            rows.append({'posting_detail':marshal(que, SecondLevels.response_fields),'parent_detail':marshal(qry2, TopLevels.response_fields)})
+
+        second_data = {
+            'second_info': {
+                'sl_amount': len(rows)
+            },
+            'second_detail_list': rows
+        }
+
+        return {'query_info': query_info,'second_data':second_data}, 200, {'Content-Type': 'application/json'}
 
 #separated into different class because different purpose (public access to user)
 class PublicResources(Resource):
@@ -320,12 +508,21 @@ class PublicResources(Resource):
 
         return marshal(qry, Users.response_fields), 200
 
-    # def options(self):
-    #     return {}, 200
+    def options(self, **kwargs):
+        return {}, 200
 
 api.add_resource(UserSignUp, '')
 api.add_resource(UserSelf, '/me')
+
+#adding postingan group
+api.add_resource(UserSelfPostingArticle,'/me/article')
+api.add_resource(UserSelfPostingQuestion,'/me/question')
+api.add_resource(UserSelfPostingAnswer,'/me/answer')
+api.add_resource(UserSelfPostingComment,'/me/comment')
+
 #all wildcards should be in lower section
 #apparently jwt in higher places can cause 401 w/o prompt
 api.add_resource(PublicResources, '/<int:id>')
+
+##adding public resources (one class pls)
 api.add_resource(AdminUserEdit, '', '/<int:id>')
