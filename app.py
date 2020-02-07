@@ -4,9 +4,9 @@ import logging, sys
 from logging.handlers import RotatingFileHandler
 
 
-from werkzeug.contrib.cache import SimpleCache
+# from werkzeug.contrib.cache import SimpleCache
 
-cache = SimpleCache()
+# cache = SimpleCache()
 
 api = Api(app, catch_all_404s=True)
 
