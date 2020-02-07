@@ -101,7 +101,12 @@ class TopLevelCR(Resource):
                 'photo_url': photo_url
             }
 
-            rows.append({'user_data':user_data,'posting_detail':marshal(que, TopLevels.response_fields)})
+            row_posting_detail = marshal(que, TopLevels.response_fields)
+            sl_amount = SecondLevels.query.filter_by(parent_id=que.id).count()
+
+            row_posting_detail['sl_amount'] = sl_amount
+
+            rows.append({'user_data':user_data,'posting_detail':row_posting_detail})
 
         return {'query_info':query_info,'query_data':rows}, 200, {'Content-Type':'application/json'}
 
@@ -187,7 +192,7 @@ class TopLevelRUD(Resource):
         #second data dikosongin, buat slot komen dan jawaban
         ##doing komen dan jawaban rn
         qry2 = SecondLevels.query.filter_by(parent_id=id)
-        print(qry2)
+        # print(qry2)
 
         rows = []
         for que in qry2:
