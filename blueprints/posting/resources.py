@@ -142,7 +142,7 @@ class TopLevelCR(Resource):
 
 class TopLevelRUD(Resource):
 
-    def options(self):
+    def options(self, **kwargs):
         return {}, 200
         
     #public get by id
