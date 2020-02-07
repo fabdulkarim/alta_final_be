@@ -13,6 +13,7 @@ from datetime import datetime
 
 from .model import Users, UsersDetail, UserTags
 from ..tag.model import Tags
+from ..posting.model import TopLevels, SecondLevels
 from blueprints import db, app
 
 from . import *
@@ -283,11 +284,22 @@ class UserSelf(Resource):
             qry4 = Tags.query.get(que.tag_id)
             db_tag_list_final.append(qry4.name)
 
+        #add data postingan bikin query baru
+        qry5 = TopLevels.query.filter_by(user_id=id).filter_by(content_type='article')
+        qry6 = TopLevels.query.filter_by(user_id=id).filter_by(content_type='question')
+        qry7 = SecondLevels.query.filter_by(user_id=id).filter_by(content_type='answer')
+
         user_data = marshal(qry, Users.response_fields)
         user_detail_data = marshal(qry2, UsersDetail.response_fields)
         user_tag_data = db_tag_list_final
 
-        return {'user_data':user_data, 'user_detail_data':user_detail_data, 'user_tag_data':user_tag_data}, 200, {'Content-Type': 'application/json'}
+        user_posting_data = {
+            'article': marshal(qry5, TopLevels.response_fields),
+            'question': marshal(qry6, TopLevels.response_fields),
+            'answer': marshal(qry7, SecondLevels.response_fields)
+        }
+
+        return {'user_data':user_data, 'user_detail_data':user_detail_data, 'user_tag_data':user_tag_data, 'user_posting_data'}, 200, {'Content-Type': 'application/json'}
 
     def options(self):
         return {}, 200
