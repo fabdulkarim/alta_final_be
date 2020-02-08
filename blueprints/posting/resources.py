@@ -333,24 +333,12 @@ class SecondLevelCU(Resource):
         #HARD COPY FROM GET
         #get argument from input
         parser = reqparse.RequestParser()
-        parser.add_argument('title', location='json', required=True)
-        parser.add_argument('content_type', location='json', required=True, choices=('article','question'))
+        #sebenernya ganti tipe ga butuh juga
         parser.add_argument('html_content', location='json', required=True)
-        parser.add_argument('banner_photo_url', location='json')
         parser.add_argument('content_status', location='json')
         
         args = parser.parse_args()
-
-        #change content type safeguard
-        if (args['content_type'] != qry.content_type):
-            return {'status':'Bad Request','message':'Wrong Content Type'}, 422, {'Content-Type':'application/json'}
-
-        if (args['content_type']=='article') and (args['banner_photo_url']):
-            qry.banner_photo_url=args['banner_photo_url']
-        else:
-            qry.banner_photo_url = None
         
-        qry.title = args['title']
         qry.html_content = args['html_content']
         
         #only admin can reopen/undelete
@@ -364,7 +352,7 @@ class SecondLevelCU(Resource):
 
         db.session.commit()
 
-        return marshal(qry, TopLevels.response_fields), 200, {'Content-Type':'application/json'}
+        return marshal(qry, SecondLevels.response_fields), 200, {'Content-Type':'application/json'}
 
 
         
