@@ -315,6 +315,46 @@ class SecondLevelCU(Resource):
 
         return marshal(second_level, SecondLevels.response_fields), 200, {'Content-Type': 'application/json'} 
 
+    @jwt_required
+    def put(self,id):
+
+        qry = SecondLevels.query.filter_by(id=id)
+        qry = qry.first()
+        #also get user_id
+
+        #get user_id for posting purposes
+        user_id = get_jwt_claims()['user_id']
+        is_admin = get_jwt_claims()['isadmin']
+
+        #wrong user safeguard
+        if (qry.user_id != user_id) and (is_admin != True):
+            return {'status':'UNAUTHORIZED'}, 401, {'Content-Type':'application/json'}
+
+        #HARD COPY FROM GET
+        #get argument from input
+        parser = reqparse.RequestParser()
+        #sebenernya ganti tipe ga butuh juga
+        parser.add_argument('html_content', location='json', required=True)
+        parser.add_argument('content_status', location='json')
+        
+        args = parser.parse_args()
+        
+        qry.html_content = args['html_content']
+        
+        #only admin can reopen/undelete
+        if (is_admin == True) and (args['content_status']==0):
+            qry.content_status = 0
+        elif (args['content_status'] != 0):
+            qry.content_status = args['content_status']
+        else:
+            qry.content_status = 0
+        qry.updated_at = db.func.now()
+
+        db.session.commit()
+
+        return marshal(qry, SecondLevels.response_fields), 200, {'Content-Type':'application/json'}
+
+
         
 
 
