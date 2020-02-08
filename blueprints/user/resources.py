@@ -16,6 +16,9 @@ from ..tag.model import Tags
 from ..posting.model import TopLevels, SecondLevels
 from blueprints import db, app
 
+#using separate scripts
+from .public_get_u_by_id_posting import PublicWildcardResource
+
 from . import *
 
 bp_user = Blueprint('user', __name__)
@@ -506,10 +509,48 @@ class PublicResources(Resource):
         if qry is None:
             return {'status': 'NOT_FOUND'}, 404
 
-        return marshal(qry, Users.response_fields), 200
+        qry2 = UsersDetail.query.get(id)
+        #no none: show filter field empty
+        
+        #get list of user tags, turn into list of names
+        qry3 = UserTags.query.filter_by(user_id=id).filter_by(deleted=False)
+        db_tag_list_final = []
+        for que in qry3:
+            qry4 = Tags.query.get(que.tag_id)
+            db_tag_list_final.append(qry4.name)
+
+        user_data = marshal(qry, Users.response_fields)
+        user_detail_data = marshal(qry2, UsersDetail.response_fields)
+        user_tag_data = db_tag_list_final
+
+        return {'user_data':user_data, 'user_detail_data':user_detail_data, 'user_tag_data':user_tag_data}, 200, {'Content-Type': 'application/json'}
+
+        # return marshal(qry, Users.response_fields), 200
 
     def options(self, **kwargs):
         return {}, 200
+
+
+class PublicResourcesPosting(Resource):
+    def options(self, **kwargs):
+        return {}, 200
+
+    def get(self, id, content_type):
+
+        parser = reqparse.RequestParser()
+        parser.add_argument("p", type=int, location="args", default=1)
+        parser.add_argument("rp", type=int, location="args", default=15)
+        args = parser.parse_args()
+
+        if content_type not in ['article','question','answer', 'comment']:
+            return {'status':'URL not found'}, 404, {'Content-Type': 'application/json'}
+
+        user_id = id
+        c_type = content_type
+
+        result = PublicWildcardResource(user_id,c_type, args['p'],args['rp'])
+
+        return result, 200, {'Content-Type': 'application/json'}
 
 api.add_resource(UserSignUp, '')
 api.add_resource(UserSelf, '/me')
@@ -523,6 +564,7 @@ api.add_resource(UserSelfPostingComment,'/me/comment')
 #all wildcards should be in lower section
 #apparently jwt in higher places can cause 401 w/o prompt
 api.add_resource(PublicResources, '/<int:id>')
+api.add_resource(PublicResourcesPosting, '/<int:id>/<string:content_type>')
 
 ##adding public resources (one class pls)
 api.add_resource(AdminUserEdit, '', '/<int:id>')
