@@ -98,3 +98,20 @@ class SecondLevels(db.Model):
 
     def __repr__(self):
         return '<Second Level %r>' % self.title
+
+class TopLevelTags(db.Model):
+    __tablename__ = "tl_tag"
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    tl_id = db.Column(db.Integer, db.ForeignKey('top_level.id'), nullable=False)
+    tag_id = db.Column(db.Integer, db.ForeignKey('tag.tag_id'), nullable=False)
+    deleted = db.Column(db.Boolean, nullable=False)
+    created_at = db.Column(db.DateTime, server_default=db.func.now())
+    updated_at = db.Column(db.DateTime, server_onupdate=db.func.now())
+
+    def __init__(self, tl_id, tag_id):
+        self.tl_id = tl_id
+        self.tag_id = tag_id
+        self.deleted = False
+
+    def __repr__(self):
+        return '<TL Tags %r>' % self.id

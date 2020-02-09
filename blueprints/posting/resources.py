@@ -11,6 +11,9 @@ from .model import TopLevels, SecondLevels
 from ..user.model import Users, UsersDetail
 from blueprints import db, app
 
+#import methods for tl posting tagging
+from .tl_tags import tl_tags_post, tl_tags_put, tl_tags_return
+
 from . import *
 
 bp_posting = Blueprint('posting', __name__)
@@ -97,11 +100,15 @@ class TopLevelCR(Resource):
                 photo_url = check_photo
 
             user_data = {
-                'username': username,
+                'username': Users.query.get(que.user_id).username,
+                'display_name': username,
                 'photo_url': photo_url
             }
 
             row_posting_detail = marshal(que, TopLevels.response_fields)
+            #adding tags
+            row_posting_detail['tags'] = tl_tags_return(que.id)
+
             sl_amount = SecondLevels.query.filter_by(parent_id=que.id).count()
 
             row_posting_detail['sl_amount'] = sl_amount
@@ -121,6 +128,9 @@ class TopLevelCR(Resource):
         parser.add_argument('html_content', location='json', required=True)
         parser.add_argument('banner_photo_url', location='json')
         
+        #add tags argument input
+        parser.add_argument('tags', location='json',action='append')
+
         args = parser.parse_args()
 
         #get user_id for posting purposes
@@ -134,7 +144,14 @@ class TopLevelCR(Resource):
         db.session.add(top_level)
         db.session.commit()
 
-        return marshal(top_level, TopLevels.response_fields), 200, {'Content-Type':'application/json'}
+        #post sudah punya id, bisa ditambahi tags
+        tl_tags_post(top_level.id, args['tags'])
+
+        #prepare returnables
+        returnable = marshal(top_level, TopLevels.response_fields)
+        returnable['tags'] = tl_tags_return(top_level.id)
+
+        return returnable, 200, {'Content-Type':'application/json'}
 
     def options(self):
         return {}, 200
@@ -180,13 +197,17 @@ class TopLevelRUD(Resource):
             photo_url = check_photo
 
         user_data = {
-            'username': username,
+            'username': Users.query.get(qry.user_id).username,
+            'display_name': username,
             'photo_url': photo_url
         }
 
+        posting_detail = marshal(qry, TopLevels.response_fields)
+        posting_detail['tags'] = tl_tags_return(id)
+
         posting_data = {
             'user_data': user_data,
-            'posting_detail': marshal(qry, TopLevels.response_fields)
+            'posting_detail': posting_detail
         }
 
         #second data dikosongin, buat slot komen dan jawaban
@@ -213,10 +234,12 @@ class TopLevelRUD(Resource):
             else:
                 photo_url = check_photo
 
-            user_data = {
-                'username': username,
-                'photo_url': photo_url
+            user_data = user_data = {
+            'username': Users.query.get(que.user_id).username,
+            'display_name': username,
+            'photo_url': photo_url
             }
+            
             rows.append({'user_data':user_data,'posting_detail':marshal(que, SecondLevels.response_fields)})
 
         second_data = {
@@ -252,6 +275,8 @@ class TopLevelRUD(Resource):
         parser.add_argument('html_content', location='json', required=True)
         parser.add_argument('banner_photo_url', location='json')
         parser.add_argument('content_status', location='json')
+
+        parser.add_argument('tags', location='json', action='append')
         
         args = parser.parse_args()
 
@@ -277,8 +302,11 @@ class TopLevelRUD(Resource):
         qry.updated_at = db.func.now()
 
         db.session.commit()
+        tl_tags_put(id,args['tags'])
 
-        return marshal(qry, TopLevels.response_fields), 200, {'Content-Type':'application/json'}
+        returnable = marshal(qry, TopLevels.response_fields)
+        returnable['tags'] = tl_tags_return(id)
+        return returnable, 200, {'Content-Type':'application/json'}
 
         #return {'status':'NOT_FOUND','message':'Layanan belum tersedia, mohon maaf'}, 404, {'Content-Type':'application/json'}
 
