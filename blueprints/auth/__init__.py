@@ -48,4 +48,8 @@ class CreateTokenResource(Resource):
         claims = get_jwt_claims()
         return claims, 200
 
+class CreateTokenGoogleResource(Resource):
+    def post(self):
+        
+
 api.add_resource(CreateTokenResource, '')
