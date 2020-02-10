@@ -44,7 +44,8 @@ def tl_tags_put(tl_id, tag_list):
 
         #kondisi if existing
         if input_iter in db_tag_list_all:
-            qry_reactivate = TopLevelTags.query.filter_by(tag_id=tag_id).first()
+            qry_reactivate = TopLevelTags.query.filter_by(tag_id=tag_id).filter_by(tl_id=tl_id)
+            qry_reactivate = qry_reactivate.first()
             qry_reactivate.deleted = False
             qry_reactivate.updated_at = db.func.now()
 
@@ -61,8 +62,8 @@ def tl_tags_put(tl_id, tag_list):
         qry2 = Tags.query.filter_by(name=db_iter)
         tag_id = qry2.first().tag_id
 
-        qry_delete = TopLevelTags.query.filter_by(tag_id=tag_id).first()
-        print(qry_delete)
+        qry_delete = TopLevelTags.query.filter_by(tag_id=tag_id).filter_by(tl_id=tl_id)
+        qry_delete = qry_delete.first()
         qry_delete.deleted = True
         qry_delete.updated_at = db.func.now()
 
