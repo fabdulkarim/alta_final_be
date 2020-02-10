@@ -12,6 +12,9 @@ from blueprints import db
 from google.oauth2 import id_token
 from google.auth.transport import requests
 
+#separating google client id from codebase
+import os
+
 #for generating database-placeholder password
 import random, string
 
@@ -42,8 +45,6 @@ class CreateTokenResource(Resource):
             
             token = create_access_token(identity=args['username'], user_claims=clientData)
             
-            
-            ##### fasilitas dari flask
             return {'token': token}, 200, {'Content-Type': 'application/json'}
         return {'status': 'UNAUTHORIZED', 'message': 'invalid key or secret'}, 401, {'Content-Type': 'application/json'}
     
@@ -66,7 +67,7 @@ class CreateTokenGoogleResource(Resource):
         args = parser.parse_args()
         
         #id_token check
-        CLIENT_ID = "164164000203-aeirfg61lk5363cp27fri0odtq32cp7u.apps.googleusercontent.com"
+        CLIENT_ID = os.getenv('G_API_CLIENT_ID')
 
         try:
             idinfo = id_token.verify_oauth2_token(args['id_token'], requests.Request(), CLIENT_ID)
@@ -93,9 +94,11 @@ class CreateTokenGoogleResource(Resource):
                 #buat user_detail
             else:
                 #using sub-info per google documentation
-                ph_uname = 'google-user-' + idinfo['sub']
-                user = Users(ph_uname,idinfo['email'],password_digest_like)
+                base_uname = 'guser-' + idinfo['sub']
+                user = Users(base_uname,idinfo['email'],password_digest_like)
             try:
+                print(user)
+                print(base_uname)
                 db.session.add(user)
 
                 ##adding new user detail/info

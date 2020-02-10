@@ -30,10 +30,13 @@ def tl_tags_put(tl_id, tag_list):
     if tag_list is None:
         input_set = set()
     else:
+        #bug, jadinya kalo ada baru malah jadi nambah
         input_set = set(tag_list)
 
     input_only = input_set - set(db_tag_list)
     db_only = set(db_tag_list) - input_set
+    print("input only: ", input_only)
+    print("db only: ", db_only)
 
     for input_iter in input_only:
         qry = Tags.query.filter_by(name=input_iter)
@@ -59,6 +62,7 @@ def tl_tags_put(tl_id, tag_list):
         tag_id = qry2.first().tag_id
 
         qry_delete = TopLevelTags.query.filter_by(tag_id=tag_id).first()
+        print(qry_delete)
         qry_delete.deleted = True
         qry_delete.updated_at = db.func.now()
 

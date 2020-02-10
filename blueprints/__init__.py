@@ -117,4 +117,7 @@ app.register_blueprint(bp_posting, url_prefix='/posting')
 from blueprints.upload import bp_upload
 app.register_blueprint(bp_upload, url_prefix='/upload')
 
+from blueprints.point.resources import bp_point
+app.register_blueprint(bp_point, url_prefix='/point')
+
 db.create_all()
