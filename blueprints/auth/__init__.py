@@ -125,7 +125,7 @@ class CreateTokenGoogleResource(Resource):
 
         token = create_access_token(identity=uname_out, user_claims=clientData)
 
-        return {'token': token}, 200, {'Content-Type': 'application/json'}
+        return {'token': token, 'username':uname_out, 'email':idinfo['email']}, 200, {'Content-Type': 'application/json'}
 
 
 api.add_resource(CreateTokenResource, '')
