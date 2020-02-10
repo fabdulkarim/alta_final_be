@@ -11,3 +11,4 @@ pytest
 pytest-cov
 flask-cors
 python-dotenv
+google-api-python-client
