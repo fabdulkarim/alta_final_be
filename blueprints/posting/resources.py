@@ -129,6 +129,7 @@ class TopLevelCR(Resource):
         parser.add_argument('banner_photo_url', location='json')
         
         #add tags argument input
+        ###jadikan wajib?
         parser.add_argument('tags', location='json',action='append')
 
         args = parser.parse_args()
