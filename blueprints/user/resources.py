@@ -50,12 +50,20 @@ class AdminUserEdit(Resource):
     @jwt_required
     @admin_required
     def get(self):
-        qry = Users.query.all()
+        qry = Users.query
 
         if qry is None:
             return {'status': 'NOT_FOUND'}, 404
 
-        return marshal(qry, Users.response_fields), 200
+        rows = []
+        for que in qry:
+            user_row = marshal(que,Users.response_fields)
+            qry2 = UsersDetail.query.get(que.user_id)
+            # print(user_row)
+            user_row['user_detail'] = marshal(qry2, UsersDetail.response_fields) #?
+            rows.append(user_row)
+
+        return rows, 200
 
 
 #signup, terpisah
