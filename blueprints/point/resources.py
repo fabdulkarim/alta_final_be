@@ -26,12 +26,18 @@ class PointCRU(Resource):
 
         parser =reqparse.RequestParser()
         parser.add_argument("content_type", location="args", choices=('article','question','answer','comment'))
-        parser.add_argument('user_id',location='args')
         parser.add_argument('locator_id',location='args')
         args = parser.parse_args()
 
-        
+        # if args['content_type'] in ['article','question']:
+        qry = Points.query.filter_by(locator_id=args['locator_id'])
+        qry = qry.filter_by(user_id=user_id).filter_by(content_type=args['content_type']).first()
 
+        # if qry.deleted == False:
+        # return all, if None returns empty?
+        return marshal(qry, Points.response_fields), 200, {'Content-Type':'application/json'}
+        
+        # return mar
         #yang direturn apa?
 
     # @jwt_required
