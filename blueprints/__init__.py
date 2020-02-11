@@ -121,5 +121,6 @@ from blueprints.point.resources import bp_point
 app.register_blueprint(bp_point, url_prefix='/point')
 
 from blueprints.admin import bp_admin
-app.register_blueprint(bp_admin, '/admin')
+app.register_blueprint(bp_admin, url_prefix='/admin')
+
 db.create_all()
