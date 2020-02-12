@@ -385,7 +385,17 @@ class SecondLevelCU(Resource):
         return marshal(qry, SecondLevels.response_fields), 200, {'Content-Type':'application/json'}
 
 
-        
+class GetPopularSidebar(Resource):
+    def get(self):
+
+        qry = TopLevels.query
+
+        qry_art = qry.filter_by(content_type='article')
+        qry_que = qry.filter_by(content_type='question')
+
+        #sort by views/point
+        qry_art = qry_art.
+
 
 
 api.add_resource(TopLevelCR,'/toplevel')
