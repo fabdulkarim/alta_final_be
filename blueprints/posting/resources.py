@@ -385,9 +385,34 @@ class SecondLevelCU(Resource):
         return marshal(qry, SecondLevels.response_fields), 200, {'Content-Type':'application/json'}
 
 
-        
+class GetPopularSidebar(Resource):
+    def get(self):
+
+        qry = TopLevels.query
+
+        qry_art = qry.filter_by(content_type='article')
+        qry_que = qry.filter_by(content_type='question')
+
+        #sort by views/point
+        ##views, kata mas Leli
+        qry_art = qry_art.order_by(TopLevels.views.desc())
+        qry_que = qry_que.order_by(TopLevels.views.desc())
+
+        qry_art = qry_art.limit(5)
+        qry_que = qry_que.limit(5)
+
+        rows_art = []
+        rows_que = []
+        print(qry_que)
+        for idx, que in enumerate(qry_art):
+            rows_art.append(marshal(que, TopLevels.response_fields))
+            rows_que.append(marshal(qry_que[idx], TopLevels.response_fields))
+
+        return {'popular_art': rows_art,'popular_que':rows_que}
+ 
 
 
+api.add_resource(GetPopularSidebar, '/popular')
 api.add_resource(TopLevelCR,'/toplevel')
 api.add_resource(TopLevelRUD, '/toplevel/<int:id>')
 api.add_resource(SecondLevelCU,'/secondlevel/<int:id>')
