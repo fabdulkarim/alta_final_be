@@ -12,8 +12,10 @@ from blueprints import admin_required, user_required
 from datetime import datetime
 
 from .model import Users, UsersDetail, UserTags
+from .mini_profile import create_mini_profile
 from ..tag.model import Tags
 from ..posting.model import TopLevels, SecondLevels
+from ..posting.tl_tags import tl_tags_return
 from blueprints import db, app
 
 #using separate scripts
@@ -345,7 +347,18 @@ class UserSelfPostingArticle(Resource):
 
         rows = []
         for que in qry:
-            rows.append({'posting_detail':marshal(que, TopLevels.response_fields)})
+
+            row_posting_detail = marshal(que, TopLevels.response_fields)
+            #adding tags
+            row_posting_detail['tags'] = tl_tags_return(que.id)
+
+            sl_amount = SecondLevels.query.filter_by(parent_id=que.id).count()
+
+            row_posting_detail['sl_amount'] = sl_amount
+
+            user_data = create_mini_profile(id)
+
+            rows.append({'user_data':user_data,'posting_detail':row_posting_detail})
 
         return {'query_info': query_info,'query_data':rows}, 200, {'Content-Type': 'application/json'}
 
@@ -392,7 +405,19 @@ class UserSelfPostingQuestion(Resource):
 
         rows = []
         for que in qry:
-            rows.append({'posting_detail':marshal(que, TopLevels.response_fields)})
+            
+            row_posting_detail = marshal(que, TopLevels.response_fields)
+            #adding tags
+            row_posting_detail['tags'] = tl_tags_return(que.id)
+
+            sl_amount = SecondLevels.query.filter_by(parent_id=que.id).count()
+
+            row_posting_detail['sl_amount'] = sl_amount
+
+            user_data = create_mini_profile(id)
+
+            rows.append({'user_data':user_data,'posting_detail':row_posting_detail})
+
         return {'query_info': query_info,'query_data':rows}, 200, {'Content-Type': 'application/json'}
 
 class UserSelfPostingAnswer(Resource):
@@ -438,7 +463,21 @@ class UserSelfPostingAnswer(Resource):
         rows = []
         for que in qry:
             qry2 = TopLevels.query.get(que.parent_id)
-            rows.append({'posting_detail':marshal(que, SecondLevels.response_fields),'parent_detail':marshal(qry2, TopLevels.response_fields)})
+
+            user_data = create_mini_profile(id)
+
+            marshal_parent = marshal(qry2, TopLevels.response_fields)
+
+            marshal_parent['user_data'] = create_mini_profile(qry2.user_id)
+
+            sl_amount = SecondLevels.query.filter_by(parent_id=qry2.id).count()
+
+            marshal_parent['sl_amount'] = sl_amount
+            
+            tags = tl_tags_return(qry2.id)
+            
+            marshal_parent['tags'] = tags
+            rows.append({'user_data':user_data,'posting_detail':marshal(que, SecondLevels.response_fields),'parent_detail':marshal_parent})
 
         second_data = {
             'second_info': {
@@ -492,7 +531,21 @@ class UserSelfPostingComment(Resource):
         rows = []
         for que in qry:
             qry2 = TopLevels.query.get(que.parent_id)
-            rows.append({'posting_detail':marshal(que, SecondLevels.response_fields),'parent_detail':marshal(qry2, TopLevels.response_fields)})
+
+            user_data = create_mini_profile(id)
+
+            marshal_parent = marshal(qry2, TopLevels.response_fields)
+
+            marshal_parent['user_data'] = create_mini_profile(qry2.user_id)
+
+            sl_amount = SecondLevels.query.filter_by(parent_id=qry2.id).count()
+
+            marshal_parent['sl_amount'] = sl_amount
+            
+            tags = tl_tags_return(qry2.id)
+            
+            marshal_parent['tags'] = tags
+            rows.append({'user_data':user_data,'posting_detail':marshal(que, SecondLevels.response_fields),'parent_detail':marshal_parent})
 
         second_data = {
             'second_info': {
@@ -557,6 +610,9 @@ class PublicResourcesPosting(Resource):
         c_type = content_type
 
         result = PublicWildcardResource(user_id,c_type, args['p'],args['rp'])
+
+        if result == []:
+            return {'status':'query not found'}, 404, {'Content-Type': 'application/json'}
 
         return result, 200, {'Content-Type': 'application/json'}
 

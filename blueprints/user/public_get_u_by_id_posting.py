@@ -1,6 +1,8 @@
 from flask_restful import marshal
 
 from ..posting.model import TopLevels, SecondLevels
+from ..posting.tl_tags import tl_tags_return
+from ..user.mini_profile import create_mini_profile
 from sqlalchemy import desc
 
 
@@ -52,9 +54,23 @@ def PublicWildcardResource(id, content_type, p, rp):
     rows = []
     for que in qry:
         row_dict = {'posting_detail':marshal(que,res_field)}
+        row_dict['user_data'] = create_mini_profile(id)
         if ct == 'sec':
             qry2 = TopLevels.query.get(que.parent_id)
-            row_dict['parent_detail'] = marshal(qry2, TopLevels.response_fields)
+            marshal_parent = marshal(qry2, TopLevels.response_fields)
+            marshal_parent['user_data'] = create_mini_profile(qry2.user_id)
+
+            sl_amount = SecondLevels.query.filter_by(parent_id=qry2.id).count()
+
+            marshal_parent['sl_amount'] = sl_amount
+            
+            tags = tl_tags_return(qry2.id)
+            
+            marshal_parent['tags'] = tags
+            row_dict['parent_detail'] = marshal_parent
+        elif ct == 'top':
+            sl_amount = SecondLevels.query.filter_by(parent_id=que.id).count()
+            row_dict['posting_detail']['sl_amount'] = sl_amount
         rows.append(row_dict)
 
     if ct == 'top':
