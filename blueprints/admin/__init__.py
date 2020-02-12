@@ -11,6 +11,7 @@ from ..user.mini_profile import create_mini_profile
 from ..posting.model import TopLevels, TopLevelTags, SecondLevels
 from ..posting.tl_tags import tl_tags_return
 from ..tag.model import Tags
+from .chart import prepare_chart
 
 bp_admin = Blueprint('admin', __name__)
 api = Api(bp_admin)
@@ -196,7 +197,38 @@ class AdminTagsGet(Resource):
 
         return {'query_data':rows},200, {'Content-Type':'application/json'}
 
+class AdminChartGet(Resource):
+    #CORS
+    def options(self, *args, **kwargs):
+        return {},200, {'Content-Type':'application/json'}
+
+
+    @jwt_required
+    @admin_required
+    def get(self, data):
+
+        input_list = ['user','article','question','answer']
+        pair_list = [{'table':Users,'filter':None},{'table':TopLevels,'filter':'article'},{'table':TopLevels,'filter':'question'},{'table':SecondLevels,'filter':'answer'}]
+
+        if data not in input_list:
+            return {'status': 'PATH_NOT_FOUND'}, 404
+
+        idx_to_use = input_list.index(data)
+
+        qry = pair_list[idx_to_use]['table'].query
+
+        if pair_list[idx_to_use]['filter'] != None:
+            qry = qry.filter_by(content_type=pair_list[idx_to_use]['filter'])
+
+        # qry = Users.query
+
+        trial_return = prepare_chart(qry)
+
+        return trial_return, 200, {'Content-Type':'application/json'}
+
+
 api.add_resource(AdminUsersGet,'/user')
 api.add_resource(AdminAnswersGet,'/answer')
 api.add_resource(AdminTagsGet,'/tag')
+api.add_resource(AdminChartGet, '/chart/<string:data>')
 api.add_resource(AdminTopLevelsGet,'/<string:content_type>')
