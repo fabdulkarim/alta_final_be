@@ -5,7 +5,7 @@ from sqlalchemy import desc, or_, asc
 from flask_jwt_extended import jwt_required, get_jwt_claims
 from blueprints import admin_required, user_required
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from .model import TopLevels, SecondLevels
 from ..user.model import Users, UsersDetail
@@ -388,15 +388,24 @@ class SecondLevelCU(Resource):
 class GetPopularSidebar(Resource):
     def get(self):
 
-        qry = TopLevels.query
+        qry = TopLevels.query.filter_by(content_status=0)
+
+        #add filter after certain date(now - 3)
+        now_date = datetime.now().date()
+
+        three_days_ago = now_date - timedelta(days=3)
+        t_d_a_string = three_days_ago.strftime("%Y-%m-%d %H:%M:%S")
+
+        qry = qry.filter(TopLevels.created_at >= t_d_a_string)
+        qry = qry.order_by(TopLevels.views.desc())
 
         qry_art = qry.filter_by(content_type='article')
         qry_que = qry.filter_by(content_type='question')
 
         #sort by views/point
         ##views, kata mas Leli
-        qry_art = qry_art.order_by(TopLevels.views.desc())
-        qry_que = qry_que.order_by(TopLevels.views.desc())
+        # qry_art = qry_art.order_by(TopLevels.views.desc())
+        # qry_que = qry_que.order_by(TopLevels.views.desc())
 
         qry_art = qry_art.limit(5)
         qry_que = qry_que.limit(5)
@@ -405,8 +414,19 @@ class GetPopularSidebar(Resource):
         rows_que = []
         print(qry_que)
         for idx, que in enumerate(qry_art):
-            rows_art.append(marshal(que, TopLevels.response_fields))
-            rows_que.append(marshal(qry_que[idx], TopLevels.response_fields))
+            marshal_art = marshal(que, TopLevels.response_fields)
+
+            tags = tl_tags_return(que.id)
+            marshal_art['tags'] = tags
+
+            rows_art.append(marshal_art)
+
+            marshal_que = marshal(qry_que[idx], TopLevels.response_fields)
+            
+            tags_2 = tl_tags_return(qry_que[idx].id)
+            marshal_que['tags'] = tags_2
+
+            rows_que.append(marshal_que)
 
         return {'popular_art': rows_art,'popular_que':rows_que}
  
