@@ -109,7 +109,7 @@ class TopLevelCR(Resource):
             #adding tags
             row_posting_detail['tags'] = tl_tags_return(que.id)
 
-            sl_amount = SecondLevels.query.filter_by(parent_id=que.id).count()
+            sl_amount = SecondLevels.query.filter_by(parent_id=que.id).filter_by(content_status=0).count()
 
             row_posting_detail['sl_amount'] = sl_amount
 
@@ -268,8 +268,9 @@ class TopLevelRUD(Resource):
         }
 
         #second data dikosongin, buat slot komen dan jawaban
-        ##doing komen dan jawaban rn
-        qry2 = SecondLevels.query.filter_by(parent_id=id)
+        ##doing komen dan jawaban rn'
+        ### remove deleted
+        qry2 = SecondLevels.query.filter_by(parent_id=id).filter_by(content_status=0)
         # print(qry2)
 
         rows = []
