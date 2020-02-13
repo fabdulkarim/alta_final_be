@@ -730,7 +730,7 @@ api.add_resource(UserSelfPostingQuestion,'/me/question')
 api.add_resource(UserSelfPostingAnswer,'/me/answer')
 api.add_resource(UserSelfPostingComment,'/me/comment')
 
-#trial reputasi
+#reputasi
 api.add_resource(UserSelfReputation,'/me/reputation')
 #all wildcards should be in lower section
 #apparently jwt in higher places can cause 401 w/o prompt
