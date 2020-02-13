@@ -17,6 +17,10 @@ api = Api(bp_tag)
 
 #CUD untuk admin
 class AdminTagEdit(Resource):
+    #CORS
+    def options(self):
+        return {}, 200
+
     @jwt_required
     @admin_required
     def post(self):
@@ -58,6 +62,10 @@ class AdminTagEdit(Resource):
 
 
 class PublicGetTag(Resource):
+    #CORS
+    def options(self):
+        return {}, 200
+        
     def get(self):
 
         #public, dont show deleted ones
