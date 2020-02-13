@@ -11,6 +11,12 @@ from .model import TopLevels, SecondLevels
 from ..user.model import Users, UsersDetail
 from blueprints import db, app
 
+from ..notification.group_function import create_group
+from ..notification.send_message import send_message
+from ..notification.model import UserGroups, MessageGroups
+
+from ..user.mini_profile import create_mini_profile
+
 #import methods for tl posting tagging
 from .tl_tags import tl_tags_post, tl_tags_put, tl_tags_return
 
@@ -143,8 +149,17 @@ class TopLevelCR(Resource):
             top_level = TopLevels(id,args['title'],args['content_type'],args['html_content'])
 
         db.session.add(top_level)
-        db.session.commit()
 
+        # print(top_level)
+
+        
+        db.session.commit()
+        #add create group if question
+        if args['content_type'] == 'question':
+            g_id = create_group('question',top_level.id)
+            user_group = UserGroups(id,g_id)
+            db.session.add(user_group)
+            db.session.commit()
         #post sudah punya id, bisa ditambahi tags
         tl_tags_post(top_level.id, args['tags'])
 
@@ -343,6 +358,17 @@ class SecondLevelCU(Resource):
 
         db.session.add(second_level)
         db.session.commit()
+
+        #add send notification
+        if args['content_type'] == 'answer':
+            g_qry = MessageGroups.query
+            # print(g_qry)
+            g_qry = g_qry.filter_by(group_type='question').filter_by(owner_id=id).first()
+            print(g_qry.id)
+            display_name = create_mini_profile(user_id)['display_name']
+            msg_string = display_name + " menjawab pertanyaan Anda"
+            send_message(user_id, msg_string, g_qry.id)
+
 
         return marshal(second_level, SecondLevels.response_fields), 200, {'Content-Type': 'application/json'} 
 

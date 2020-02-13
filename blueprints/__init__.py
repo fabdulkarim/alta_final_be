@@ -123,4 +123,7 @@ app.register_blueprint(bp_point, url_prefix='/point')
 from blueprints.admin import bp_admin
 app.register_blueprint(bp_admin, url_prefix='/admin')
 
+from blueprints.notification.resources import bp_nofity
+app.register_blueprint(bp_nofity, url_prefix='/notification')
+
 db.create_all()
