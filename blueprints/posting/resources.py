@@ -421,6 +421,9 @@ class GetPopularSidebar(Resource):
 
             rows_art.append(marshal_art)
 
+
+            ##BUG, error caused by small number of art/que (<5)
+            ## when numbers dont match, index error when accessing the other stack
             marshal_que = marshal(qry_que[idx], TopLevels.response_fields)
             
             tags_2 = tl_tags_return(qry_que[idx].id)
