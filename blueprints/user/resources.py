@@ -556,6 +556,69 @@ class UserSelfPostingComment(Resource):
 
         return {'query_info': query_info,'second_data':second_data}, 200, {'Content-Type': 'application/json'}
 
+class UserSelfReputation(Resource):
+    #CORS
+    def options(self, *args, **kwargs):
+        return {},200
+
+    @jwt_required
+    @user_required
+    def get(self):
+        # qry = Tags.query
+
+        user_id = get_jwt_claims()['user_id']
+
+        # for que in qry:
+        article = TopLevels.query.with_entities(TopLevels.user_id, TopLevels.id, TopLevels.point, TopLevels.content_type)
+        answer = SecondLevels.query.with_entities(SecondLevels.user_id, SecondLevels.parent_id.label("id"), SecondLevels.point, SecondLevels.content_type)
+
+        article = article.filter_by(content_type='article')
+        answer = answer.filter_by(content_type='answer')
+
+        a_and_a = article.union(answer).filter_by(user_id=user_id)
+
+        tag_dict = {}
+        rows = []
+
+        for iter in a_and_a:
+            # print(iter)
+            # print(iter.id)
+            iter_tags = tl_tags_return(iter.id)
+            # print(iter_tags)
+            for single_tag in iter_tags:
+                try:
+                    tag_idx = [item.tag_name for item in rows].index(single_tag)
+                    rows[tag_idx]['point'] += iter.point
+                    rows[tag_idx][iter.content_type] += 1
+                except:
+                    tag_row = {'tag_name':single_tag,'point':iter.point}
+                    tag_row[iter.content_type] = 1
+                    if iter.content_type == 'article':
+                        tag_row['answer'] = 1
+                    else:
+                        tag_row['article'] = 0
+                    rows.append(tag_row)
+                    
+                # if single_tag not in [ x for x in tag_dict ]:
+                #     tag_dict[single_tag] = {'point': iter.point}
+                #     tag_dict[single_tag][iter.content_type] = 1
+                #     if iter.content_type == 'article':
+                #         tag_dict[single_tag]['answer'] = 0
+                #     else:
+                #         tag_dict[single_tag]['article'] = 0
+                #     # error
+                #     # tag_dict[single_tag][ next(item for item in ['article','answer'] if item != iter.content_type) ] = 0
+                # else:
+                #     tag_dict[single_tag]['point'] += iter.point
+                #     tag_dict[single_tag][iter.content_type] += 1
+            # print(rows)
+
+        return rows, 200, {'Content-Type': 'application/json'}
+
+        #get all article and answer (and their points?)
+        #get their tags?
+        #build points?
+        # UNTESTED BCS THERES NO DATA
 #separated into different class because different purpose (public access to user)
 class PublicResources(Resource):
     
@@ -616,6 +679,48 @@ class PublicResourcesPosting(Resource):
 
         return result, 200, {'Content-Type': 'application/json'}
 
+class PublicResourcesReputation(Resource):
+    #CORS
+    def options(self, *args, **kwargs):
+        return {},200
+
+    # @jwt_required
+    # @user_required
+    def get(self,id):
+        
+        article = TopLevels.query.with_entities(TopLevels.user_id, TopLevels.id, TopLevels.point, TopLevels.content_type)
+        answer = SecondLevels.query.with_entities(SecondLevels.user_id, SecondLevels.parent_id.label("id"), SecondLevels.point, SecondLevels.content_type)
+
+        article = article.filter_by(content_type='article')
+        answer = answer.filter_by(content_type='answer')
+
+        a_and_a = article.union(answer).filter_by(user_id=id)
+
+        tag_dict = {}
+        rows = []
+
+        for iter in a_and_a:
+            # print(iter)
+            # print(iter.id)
+            iter_tags = tl_tags_return(iter.id)
+            # print(iter_tags)
+            for single_tag in iter_tags:
+                try:
+                    tag_idx = [item.tag_name for item in rows].index(single_tag)
+                    rows[tag_idx]['point'] += iter.point
+                    rows[tag_idx][iter.content_type] += 1
+                except:
+                    tag_row = {'tag_name':single_tag,'point':iter.point}
+                    tag_row[iter.content_type] = 1
+                    if iter.content_type == 'article':
+                        tag_row['answer'] = 1
+                    else:
+                        tag_row['article'] = 0
+                    rows.append(tag_row)
+            # print(rows)
+
+        return rows, 200, {'Content-Type': 'application/json'}
+
 api.add_resource(UserSignUp, '')
 api.add_resource(UserSelf, '/me')
 
@@ -625,9 +730,12 @@ api.add_resource(UserSelfPostingQuestion,'/me/question')
 api.add_resource(UserSelfPostingAnswer,'/me/answer')
 api.add_resource(UserSelfPostingComment,'/me/comment')
 
+#trial reputasi
+api.add_resource(UserSelfReputation,'/me/reputation')
 #all wildcards should be in lower section
 #apparently jwt in higher places can cause 401 w/o prompt
 api.add_resource(PublicResources, '/<int:id>')
+api.add_resource(PublicResourcesReputation, '/<int:id>/reputation')
 api.add_resource(PublicResourcesPosting, '/<int:id>/<string:content_type>')
 
 ##adding public resources (one class pls)
