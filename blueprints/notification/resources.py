@@ -73,20 +73,22 @@ class UserNotification(Resource):
     def put(self,id):
         user_id = get_jwt_claims()['user_id']
 
-        qry = MessageReceipts.query.filter_by(recipient_uid=user_id).filter_by(id=id)
+        qry = MessageReceipts.query.filter_by(recipient_uid=user_id).filter_by(id=id).first()
 
         #if 404
+        if qry is None:
+            return {'status':'error','message':'NOT FOUND'}, 404
 
         parser =reqparse.RequestParser()
         parser.add_argument("is_read", location="json")
         parser.add_argument('deleted',location='json')
         args = parser.parse_args()
 
-        qry.is_read = args['is_read']
-        qry.deleted = args['deleted']
+        qry.is_read = bool(args['is_read'])
+        qry.deleted = bool(args['deleted'])
 
         db.session.commit()
 
         return marshal(qry, MessageReceipts.response_fields), 200
 
-api.add_resource(UserNotification, '')
+api.add_resource(UserNotification, '','/<int:id>')
