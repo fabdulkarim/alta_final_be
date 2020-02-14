@@ -29,11 +29,11 @@ def prepare_chart(query_object):
 
     date_start = datetime.strptime(returnable[0]['date'],"%Y-%m-%d")
     date_end = datetime.strptime(returnable[-1]['date'],"%Y-%m-%d")
+    date_now = datetime.now()
 
-    delta_days = (date_end - date_start).days
-
+    delta_days = (date_now - date_start).days
     for iter in range(delta_days):
-        iter_date = date_start + timedelta(days=iter)
+        iter_date = date_start + timedelta(days=iter+1)
         iter_date_str = iter_date.strftime("%Y-%m-%d")
         if iter_date_str not in [ x['date'] for x in returnable ]:
             iter_date_before_str = (iter_date - timedelta(days=1)).strftime("%Y-%m-%d")
