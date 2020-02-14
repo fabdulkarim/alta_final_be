@@ -30,10 +30,10 @@ class AdminUsersGet(Resource):
         if qry is None:
             return {'status': 'NOT_FOUND'}, 404
 
-        parser =reqparse.RequestParser()
-        parser.add_argument("p", type=int, location="args", default=1)
-        parser.add_argument("rp", type=int, location="args", default=15)
-        args = parser.parse_args()
+        # parser =reqparse.RequestParser()
+        # parser.add_argument("p", type=int, location="args", default=1)
+        # parser.add_argument("rp", type=int, location="args", default=15)
+        # args = parser.parse_args()
 
 
         #add sort by time
@@ -41,23 +41,25 @@ class AdminUsersGet(Resource):
 
         #count qry result
         total_result = len(qry.all())
-        if (total_result%args['rp'] != 0) | (total_result == 0):
-            total_pages = int(total_result/args['rp']) + 1
-        else:
-            total_pages = int(total_result/args['rp'])
+        # if (total_result%args['rp'] != 0) | (total_result == 0):
+        #     total_pages = int(total_result/args['rp']) + 1
+        # else:
+        #     total_pages = int(total_result/args['rp'])
 
 
         #pagination
 
-        offset = (args['p']-1)*args['rp']
-        qry = qry.limit(args['rp']).offset(offset)
+        # offset = (args['p']-1)*args['rp']
+        # qry = qry.limit(args['rp']).offset(offset)
 
         query_info = {
-            'total_result': total_result,
-            'total_pages': total_pages,
-            'page_number': args['p'],
-            'result_per_pages': args['rp']
+            'total_result': total_result
         }
+        # ,
+        #     'total_pages': total_pages,
+        #     'page_number': args['p'],
+        #     'result_per_pages': args['rp']
+        # }
 
         rows = []
         for que in qry:
@@ -74,6 +76,8 @@ class AdminTopLevelsGet(Resource):
     def options(self, *args, **kwargs):
         return {},200, {'Content-Type':'application/json'}
 
+    @jwt_required
+    @admin_required
     def get(self, content_type):
 
         qry = TopLevels.query.filter_by(content_type=content_type)
@@ -81,33 +85,34 @@ class AdminTopLevelsGet(Resource):
         if qry is None:
             return {'status': 'NOT_FOUND'}, 404
 
-        parser = reqparse.RequestParser()
-        parser.add_argument("p", type=int, location="args", default=1)
-        parser.add_argument("rp", type=int, location="args", default=15)
-        args = parser.parse_args()
+        # parser = reqparse.RequestParser()
+        # parser.add_argument("p", type=int, location="args", default=1)
+        # parser.add_argument("rp", type=int, location="args", default=15)
+        # args = parser.parse_args()
 
         #add sort by time
         qry = qry.order_by(desc(TopLevels.created_at))
 
         #count qry result
         total_result = len(qry.all())
-        if (total_result%args['rp'] != 0) | (total_result == 0):
-            total_pages = int(total_result/args['rp']) + 1
-        else:
-            total_pages = int(total_result/args['rp'])
+        # if (total_result%args['rp'] != 0) | (total_result == 0):
+        #     total_pages = int(total_result/args['rp']) + 1
+        # else:
+        #     total_pages = int(total_result/args['rp'])
 
 
         #pagination
 
-        offset = (args['p']-1)*args['rp']
-        qry = qry.limit(args['rp']).offset(offset)
+        # offset = (args['p']-1)*args['rp']
+        # qry = qry.limit(args['rp']).offset(offset)
 
         query_info = {
-            'total_result': total_result,
-            'total_pages': total_pages,
-            'page_number': args['p'],
-            'result_per_pages': args['rp']
-        }
+            'total_result': total_result}
+        #     ,
+        #     'total_pages': total_pages,
+        #     'page_number': args['p'],
+        #     'result_per_pages': args['rp']
+        # }
 
         rows = []
         for que in qry:
@@ -135,33 +140,34 @@ class AdminAnswersGet(Resource):
         if qry is None:
             return {'status': 'NOT_FOUND'}, 404
 
-        parser = reqparse.RequestParser()
-        parser.add_argument("p", type=int, location="args", default=1)
-        parser.add_argument("rp", type=int, location="args", default=15)
-        args = parser.parse_args()
+        # parser = reqparse.RequestParser()
+        # parser.add_argument("p", type=int, location="args", default=1)
+        # parser.add_argument("rp", type=int, location="args", default=15)
+        # args = parser.parse_args()
 
         #add sort by time
         qry = qry.order_by(desc(SecondLevels.created_at))
 
         #count qry result
         total_result = len(qry.all())
-        if (total_result%args['rp'] != 0) | (total_result == 0):
-            total_pages = int(total_result/args['rp']) + 1
-        else:
-            total_pages = int(total_result/args['rp'])
+        # if (total_result%args['rp'] != 0) | (total_result == 0):
+        #     total_pages = int(total_result/args['rp']) + 1
+        # else:
+        #     total_pages = int(total_result/args['rp'])
 
 
-        #pagination
+        # #pagination
 
-        offset = (args['p']-1)*args['rp']
-        qry = qry.limit(args['rp']).offset(offset)
+        # offset = (args['p']-1)*args['rp']
+        # qry = qry.limit(args['rp']).offset(offset)
 
         query_info = {
-            'total_result': total_result,
-            'total_pages': total_pages,
-            'page_number': args['p'],
-            'result_per_pages': args['rp']
-        }
+            'total_result': total_result}
+        #     ,
+        #     'total_pages': total_pages,
+        #     'page_number': args['p'],
+        #     'result_per_pages': args['rp']
+        # }
 
         rows = []
         for que in qry:
@@ -180,8 +186,6 @@ class AdminTagsGet(Resource):
     def options(self, *args, **kwargs):
         return {},200, {'Content-Type':'application/json'}
     
-    @jwt_required
-    @admin_required
     def get(self):
         
         qry = Tags.query
