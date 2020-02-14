@@ -3,6 +3,7 @@ from flask_restful import Api, reqparse, Resource, marshal, inputs
 from flask_jwt_extended import jwt_required, get_jwt_claims
 from blueprints import admin_required, user_required
 
+from ..posting.model import TopLevels, SecondLevels
 from .model import MessageGroups, UserGroups, MessageReceipts, Messages
 from .group_function import create_group
 
@@ -63,8 +64,12 @@ class UserNotification(Resource):
         
         for que in qry:
             notif_row = marshal(que,MessageReceipts.response_fields)
-            msg_qry = Messages.query.get(que.message_id).message_content
-            notif_row['message_content'] = msg_qry
+            msg_qry = Messages.query.get(que.message_id)
+            notif_row['message_content'] = msg_qry.message_content
+            tl_qry = TopLevels.query.get(msg_qry.tl_id)
+            sl_qry = SecondLevels.query.get(msg_qry.sl_id)
+            notif_row['tl_content'] = marshal(tl_qry, TopLevels.response_fields)
+            notif_row['sl_content'] = marshal(sl_qry, SecondLevels.response_fields)
             rows.append(notif_row)
 
         return rows, 200

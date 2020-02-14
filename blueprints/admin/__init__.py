@@ -76,6 +76,8 @@ class AdminTopLevelsGet(Resource):
     def options(self, *args, **kwargs):
         return {},200, {'Content-Type':'application/json'}
 
+    @jwt_required
+    @admin_required
     def get(self, content_type):
 
         qry = TopLevels.query.filter_by(content_type=content_type)
@@ -184,8 +186,6 @@ class AdminTagsGet(Resource):
     def options(self, *args, **kwargs):
         return {},200, {'Content-Type':'application/json'}
     
-    @jwt_required
-    @admin_required
     def get(self):
         
         qry = Tags.query

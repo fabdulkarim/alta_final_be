@@ -364,10 +364,10 @@ class SecondLevelCU(Resource):
             g_qry = MessageGroups.query
             # print(g_qry)
             g_qry = g_qry.filter_by(group_type='question').filter_by(owner_id=id).first()
-            print(g_qry.id)
+            # print(g_qry.id)
             display_name = create_mini_profile(user_id)['display_name']
             msg_string = display_name + " menjawab pertanyaan Anda"
-            send_message(user_id, msg_string, g_qry.id)
+            send_message(user_id, msg_string, g_qry.id,tl_id=id,sl_id=second_level.id)
 
 
         return marshal(second_level, SecondLevels.response_fields), 200, {'Content-Type': 'application/json'} 
