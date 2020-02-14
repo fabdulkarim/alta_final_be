@@ -577,17 +577,14 @@ class UserSelfReputation(Resource):
 
         a_and_a = article.union(answer).filter_by(user_id=user_id)
 
-        tag_dict = {}
+        # tag_dict = {}
         rows = []
 
         for iter in a_and_a:
-            # print(iter)
-            # print(iter.id)
             iter_tags = tl_tags_return(iter.id)
-            # print(iter_tags)
             for single_tag in iter_tags:
                 try:
-                    tag_idx = [item.tag_name for item in rows].index(single_tag)
+                    tag_idx = [item['tag_name'] for item in rows].index(single_tag)
                     rows[tag_idx]['point'] += iter.point
                     rows[tag_idx][iter.content_type] += 1
                 except:
@@ -598,20 +595,6 @@ class UserSelfReputation(Resource):
                     else:
                         tag_row['article'] = 0
                     rows.append(tag_row)
-                    
-                # if single_tag not in [ x for x in tag_dict ]:
-                #     tag_dict[single_tag] = {'point': iter.point}
-                #     tag_dict[single_tag][iter.content_type] = 1
-                #     if iter.content_type == 'article':
-                #         tag_dict[single_tag]['answer'] = 0
-                #     else:
-                #         tag_dict[single_tag]['article'] = 0
-                #     # error
-                #     # tag_dict[single_tag][ next(item for item in ['article','answer'] if item != iter.content_type) ] = 0
-                # else:
-                #     tag_dict[single_tag]['point'] += iter.point
-                #     tag_dict[single_tag][iter.content_type] += 1
-            # print(rows)
 
         return rows, 200, {'Content-Type': 'application/json'}
 
@@ -706,7 +689,8 @@ class PublicResourcesReputation(Resource):
             # print(iter_tags)
             for single_tag in iter_tags:
                 try:
-                    tag_idx = [item.tag_name for item in rows].index(single_tag)
+                    tag_list = [ item['tag_name'] for item in rows ]
+                    tag_idx = tag_list.index(single_tag)
                     rows[tag_idx]['point'] += iter.point
                     rows[tag_idx][iter.content_type] += 1
                 except:
@@ -717,7 +701,6 @@ class PublicResourcesReputation(Resource):
                     else:
                         tag_row['article'] = 0
                     rows.append(tag_row)
-            # print(rows)
 
         return rows, 200, {'Content-Type': 'application/json'}
 
@@ -730,7 +713,7 @@ api.add_resource(UserSelfPostingQuestion,'/me/question')
 api.add_resource(UserSelfPostingAnswer,'/me/answer')
 api.add_resource(UserSelfPostingComment,'/me/comment')
 
-#trial reputasi
+#reputasi
 api.add_resource(UserSelfReputation,'/me/reputation')
 #all wildcards should be in lower section
 #apparently jwt in higher places can cause 401 w/o prompt

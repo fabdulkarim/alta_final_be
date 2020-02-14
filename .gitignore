@@ -175,6 +175,8 @@ dmypy.json
 .env
 #ignore all logs
 *.log
+#ignore build/dockerpush
+.dockerpush.sh
 #ignore migrations result and storage dir
 migrations/
 storage/
