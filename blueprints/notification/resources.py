@@ -7,6 +7,8 @@ from ..posting.model import TopLevels, SecondLevels
 from .model import MessageGroups, UserGroups, MessageReceipts, Messages
 from .group_function import create_group
 
+from sqlalchemy import desc
+
 from blueprints import db
 
 bp_nofity = Blueprint('notify', __name__)
@@ -59,6 +61,7 @@ class UserNotification(Resource):
         user_id = get_jwt_claims()['user_id']
 
         qry = MessageReceipts.query.filter_by(recipient_uid=user_id)
+        qry = qry.order_by(desc(MessageReceipts.created_at))
 
         rows = []
         
