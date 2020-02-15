@@ -70,6 +70,7 @@ def PublicWildcardResource(id, content_type, p, rp):
             row_dict['parent_detail'] = marshal_parent
         elif ct == 'top':
             sl_amount = SecondLevels.query.filter_by(parent_id=que.id).count()
+            row_dict['posting_detail']['tags'] = tl_tags_return(que.id)
             row_dict['posting_detail']['sl_amount'] = sl_amount
         rows.append(row_dict)
 
