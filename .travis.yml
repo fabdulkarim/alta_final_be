@@ -1,0 +1,32 @@
+sudo: required
+services:
+- docker
+os:
+- linux
+env:
+  global:
+  - DOCKER_IMAGE_NAME="portofolio"
+  - DOCKER_HUB_ORG="fabdulkarim"
+  - IMG_VERSION="v3.4.0"
+before-install:
+- openssl aes-256-cbc -K $encrypted_628767f3ab56_key -iv $encrypted_628767f3ab56_iv
+  -in deploy_fbe.rsa.enc -out deploy_fbe.rsa -d
+- eval "$(ssh-agent -s)"
+- chmod 600 deploy_fbe.rsa
+- ssh-add deploy_fbe.rsa
+- docker login -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}"
+script:
+- sed -i -e 's|DB_USER|'"${DATABASE_USER}"'|g' .envdummy
+- sed -i -e 's|DB_PASS|'"${DATABASE_PASSWORD}"'|g' .envdummy
+- sed -i -e 's|DB_URL|'"${DATABASE_URL}"'|g' .envdummy
+- sed -i -e 's|DB_NAME|'"${DATABASE_NAME}"'|g' .envdummy
+- sed -i -e 's|GAPI_CL_ID|'"${GOOGLE_API_CL_ID}"'|g' .envdummy
+- sed -i -e 's|IMG_VER|'"${IMG_VERSION}"'|g' deploy.sh
+after_script:
+- docker build -t ${DOCKER_HUB_ORG}/${DOCKER_IMAGE_NAME}:fbe-${IMG_VERSION} .
+- docker push ${DOCKER_HUB_ORG}/${DOCKER_IMAGE_NAME}:fbe-${IMG_VERSION}
+- ssh-keyscan -H $SSH_IP >> ~/.ssh/known_hosts
+- ssh -v -i deploy_fbe.rsa $SSH_USER@$SSH_IP DIR=$ROOT_DIR  'bash -s' < deploy.sh
+branches:
+  only:
+  - release
