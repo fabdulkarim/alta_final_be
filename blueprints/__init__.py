@@ -21,7 +21,7 @@ CORS(app)
 #fadhil using dotenv for not hard-coding database URL
 from dotenv import load_dotenv
 from pathlib import Path  # python3 only
-env_path = Path('.') / '.env'
+env_path = Path('.') / '.envdummy'
 load_dotenv(dotenv_path=env_path)
 username = os.getenv('DATABASE_USER')
 password = os.getenv('DATABASE_PASSWORD')
